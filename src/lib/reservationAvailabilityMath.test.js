@@ -6,12 +6,6 @@ import {
   freeTables,
 } from "./reservationAvailabilityMath.js";
 
-function hhmm(m) {
-  const h = Math.floor(m / 60);
-  const mi = m % 60;
-  return `${String(h).padStart(2, "0")}:${String(mi).padStart(2, "0")}`;
-}
-
 describe("intervalsOverlap", () => {
   it("detecta solape parcial", () => {
     assert.equal(intervalsOverlap(60, 120, 90, 150), true);
