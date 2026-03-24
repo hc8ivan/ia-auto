@@ -1,13 +1,33 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-theme="dark">
   <head>
     <meta charset="utf-8" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
-    <meta name="theme-color" content="#0a0b0d" />
-    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#0a0b0d" id="meta-theme-color" />
+    <meta name="color-scheme" content="dark light" />
+    <meta
+      name="description"
+      content="La Terraza — Reservas, horarios y consultas en Madrid centro. Cocina mediterránea."
+    />
+    <meta property="og:title" content="La Terraza — Concierge" />
+    <meta
+      property="og:description"
+      content="Reservas, horarios y consultas en Madrid centro. Cocina mediterránea."
+    />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_ES" />
+    <meta id="meta-og-url" property="og:url" content="" />
+    <meta id="meta-og-image" property="og:image" content="" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="La Terraza — Concierge" />
+    <meta
+      name="twitter:description"
+      content="Reservas, horarios y consultas en Madrid centro."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <title>La Terraza — Concierge</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -24,6 +44,14 @@
       <div class="page-bg__grain"></div>
     </div>
 
+    <div
+      id="a11y-announcer"
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    ></div>
+
     <div class="layout">
       <header class="hero">
         <div class="hero__top">
@@ -37,20 +65,32 @@
               Cocina mediterránea y reservas con el mismo cuidado que en sala.
             </p>
           </div>
+          <div class="hero__actions">
+            <button
+              type="button"
+              class="icon-btn"
+              id="theme-toggle"
+              aria-label="Cambiar tema claro u oscuro"
+              title="Tema"
+            >
+              <span class="icon-btn__sun" aria-hidden="true">☀</span>
+              <span class="icon-btn__moon" aria-hidden="true">☽</span>
+            </button>
+          </div>
         </div>
 
-        <ul class="chips" aria-label="Información del restaurante">
+        <ul class="chips" aria-label="Información del restaurante" id="hero-chips">
           <li class="chip">
             <span class="chip__label">Comida</span>
-            <span class="chip__value">13:00 – 16:00</span>
+            <span class="chip__value" id="chip-lunch">…</span>
           </li>
           <li class="chip">
             <span class="chip__label">Cena</span>
-            <span class="chip__value">20:00 – 23:00</span>
+            <span class="chip__value" id="chip-dinner">…</span>
           </li>
           <li class="chip">
             <span class="chip__label">Sala</span>
-            <span class="chip__value">15 mesas</span>
+            <span class="chip__value" id="chip-tables">…</span>
           </li>
           <li class="chip chip--accent">
             <span class="chip__label">Asistente</span>
@@ -72,12 +112,32 @@
                 <p class="chat-panel__sub">Reservas, horarios y consultas</p>
               </div>
             </div>
-            <p class="chat-panel__hint">
-              Disponibilidad en tiempo real · Madrid
-            </p>
+            <div class="chat-panel__head-right">
+              <button
+                type="button"
+                class="btn-ghost"
+                id="btn-new-chat"
+                title="Borra la conversación en este dispositivo"
+              >
+                Nueva conversación
+              </button>
+              <p class="chat-panel__hint">
+                Disponibilidad en tiempo real · Madrid
+              </p>
+            </div>
           </div>
 
           <div class="chat-panel__body">
+            <div
+              id="messages-skeleton"
+              class="messages-skeleton"
+              hidden
+              aria-hidden="true"
+            >
+              <div class="messages-skeleton__bar messages-skeleton__bar--short"></div>
+              <div class="messages-skeleton__bar messages-skeleton__bar--long"></div>
+              <div class="messages-skeleton__bar messages-skeleton__bar--med"></div>
+            </div>
             <div id="messages" class="messages" tabindex="-1">
               <div class="empty" id="empty">
                 <p class="empty__title">¿En qué podemos ayudarte?</p>
@@ -120,37 +180,57 @@
                 >0 / 2000</span
               >
             </div>
-            <button type="submit" class="composer__submit" id="send">
-              <span class="composer__submit-text">Enviar</span>
-              <svg
-                class="composer__icon"
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                aria-hidden="true"
-              >
-                <path
-                  d="M5 12h12m0 0-4-4m4 4-4 4"
-                  stroke="currentColor"
-                  stroke-width="1.75"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </button>
+            <div class="composer__actions">
+              <p class="composer__kbd-hint" aria-hidden="true">
+                Enter envía · Mayús+Enter nueva línea
+              </p>
+              <button type="submit" class="composer__submit" id="send">
+                <span class="composer__submit-text">Enviar</span>
+                <svg
+                  class="composer__icon"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M5 12h12m0 0-4-4m4 4-4 4"
+                    stroke="currentColor"
+                    stroke-width="1.75"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
           </form>
           <p id="status" class="foot-note" role="status"></p>
+          <p class="micro-legal" aria-hidden="true">
+            La Terraza · Madrid · Asistente con IA · Datos para reserva ·
+            <a class="footer-link" href="/reservas">Calendario</a>
+          </p>
         </section>
 
         <footer class="footer">
           <p>
             La Terraza · Madrid centro · Asistente con IA · Datos tratados con
-            fines de reserva
+            fines de reserva ·
+            <a class="footer-link" href="/reservas">Calendario de reservas</a>
           </p>
         </footer>
       </main>
     </div>
+
+    <template id="tpl-empty">
+      <div class="empty" data-empty-root>
+        <p class="empty__title">¿En qué podemos ayudarte?</p>
+        <p class="empty__text">
+          Indica fecha, hora, comensales, teléfono y correo para la
+          confirmación. Menciona si preferís terraza o una celebración.
+        </p>
+      </div>
+    </template>
 
     <script src="/app.js" defer></script>
   </body>

@@ -94,4 +94,8 @@ export const config = {
     900,
     Math.max(30, intEnv("RESERVATION_IDEMPOTENCY_WINDOW_SEC", 120)),
   ),
+  /** URL pública del sitio (opcional): Open Graph y enlaces absolutos en cliente. */
+  publicBaseUrl: (process.env.PUBLIC_BASE_URL ?? "").trim(),
+  /** Clave para panel /api/admin/* y /reservas.html (cabecera X-Admin-Key). Vacío = admin desactivado. */
+  adminApiKey: (process.env.ADMIN_API_KEY ?? "").trim(),
 };

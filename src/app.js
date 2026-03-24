@@ -9,6 +9,7 @@ import scheduleRoutes from "./routes/scheduleRoutes.js";
 import reservationRoutes from "./routes/reservationRoutes.js";
 import mailRoutes from "./routes/mailRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
+import adminRoutes from "./routes/adminRoutes.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { requestId } from "./middleware/requestId.js";
@@ -37,11 +38,16 @@ export function createApp() {
     cors({
       origin: config.corsOrigin,
       methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type"],
+      allowedHeaders: ["Content-Type", "X-Admin-Key", "Authorization"],
     }),
   );
 
   app.use(express.json({ limit: "32kb" }));
+
+  const reservasHtml = path.join(publicDir, "reservas.html");
+  app.get(["/reservas", "/reservas.html"], (_req, res) => {
+    res.sendFile(reservasHtml);
+  });
 
   app.get("/health", (_req, res) => {
     const dbOk = databaseHealthCheck();
@@ -61,6 +67,7 @@ export function createApp() {
   app.use("/api", reservationRoutes);
   app.use("/api", mailRoutes);
   app.use("/api", chatRoutes);
+  app.use("/api", adminRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

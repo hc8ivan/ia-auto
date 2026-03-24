@@ -14,8 +14,22 @@ export function listConfirmedForDate(reservationDate) {
 }
 
 /**
- * @param {object} row
+ * Reservas confirmadas en un rango de fechas (inclusive), ordenadas por día y hora.
+ * @param {string} fromYmd
+ * @param {string} toYmd
  */
+export function listConfirmedBetween(fromYmd, toYmd) {
+  return getDb()
+    .prepare(
+      `SELECT id, reservation_date, start_time, duration_minutes, party_size, tables_used,
+              customer_name, customer_phone, customer_email, status, created_at, notes
+       FROM reservations
+       WHERE reservation_date >= ? AND reservation_date <= ? AND status = 'confirmed'
+       ORDER BY reservation_date ASC, start_time ASC`,
+    )
+    .all(fromYmd, toYmd);
+}
+
 /**
  * Evita doble inserción si el modelo invoca create_reservation dos veces seguidas (misma sesión y datos).
  * @param {string} sessionId

@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0b0d" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="robots" content="noindex,nofollow" />
+    <title>La Terraza — Calendario de reservas</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/reservas.css" />
+  </head>
+  <body class="reservas-page">
+    <div class="page-bg" aria-hidden="true">
+      <div class="page-bg__glow page-bg__glow--1"></div>
+      <div class="page-bg__glow page-bg__glow--2"></div>
+      <div class="page-bg__grain"></div>
+    </div>
+
+    <div class="reservas-layout">
+      <header class="reservas-header">
+        <div>
+          <p class="reservas-kicker">Panel interno · solo personal</p>
+          <h1 class="reservas-title">Reservas</h1>
+          <p class="reservas-sub">
+            Calendario en vivo según la base de datos. Misma clave que
+            <code>ADMIN_API_KEY</code> en el servidor.
+          </p>
+        </div>
+        <a class="reservas-back" href="/">← Volver al chat</a>
+      </header>
+
+      <section class="reservas-auth card-surface" id="auth-panel" hidden>
+        <label for="admin-key">Clave de administración</label>
+        <div class="reservas-auth-row">
+          <input
+            id="admin-key"
+            type="password"
+            autocomplete="current-password"
+            placeholder="Pegue ADMIN_API_KEY"
+          />
+          <button type="button" class="btn-primary" id="btn-save-key">Guardar</button>
+        </div>
+        <p class="reservas-hint">
+          Se guarda solo en este navegador (sessionStorage). No la comparta.
+        </p>
+      </section>
+
+      <p class="reservas-error" id="auth-error" role="alert" hidden></p>
+
+      <div class="reservas-main" id="main-panel" hidden>
+        <div class="reservas-toolbar card-surface">
+          <button type="button" class="btn-icon" id="btn-prev" aria-label="Mes anterior">‹</button>
+          <h2 class="reservas-month" id="month-label"></h2>
+          <button type="button" class="btn-icon" id="btn-next" aria-label="Mes siguiente">›</button>
+          <button type="button" class="btn-ghost btn-today" id="btn-today">Hoy</button>
+        </div>
+
+        <div class="reservas-cal-wrap card-surface">
+          <div class="cal-weekdays" aria-hidden="true">
+            <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span
+            ><span>Sáb</span><span>Dom</span>
+          </div>
+          <div class="cal-grid" id="cal-grid"></div>
+        </div>
+
+        <aside class="reservas-detail card-surface" id="day-detail">
+          <p class="detail-placeholder" id="detail-placeholder">
+            Pulse un día con reservas para ver el detalle.
+          </p>
+          <div id="detail-content" hidden></div>
+        </aside>
+
+        <section class="reservas-mail card-surface">
+          <h3 class="reservas-mail-title">Probar correo (SMTP)</h3>
+          <p class="reservas-mail-desc">
+            Envía un email de prueba desde el servidor. Útil tras configurar Render.
+          </p>
+          <div class="reservas-mail-row">
+            <input
+              type="email"
+              id="mail-test-to"
+              placeholder="correo@ejemplo.com"
+              autocomplete="email"
+            />
+            <button type="button" class="btn-primary" id="btn-mail-test">Enviar prueba</button>
+          </div>
+          <p class="reservas-mail-status" id="mail-test-status" role="status"></p>
+        </section>
+      </div>
+    </div>
+
+    <script src="/reservas.js" defer></script>
+  </body>
+</html>

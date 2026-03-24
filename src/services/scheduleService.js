@@ -225,5 +225,13 @@ export function getPublicSchedule(requestedDays) {
     timezone: tz,
     generatedAt: DateTime.now().setZone(tz).toISO(),
     days,
+    capacity: {
+      tables: config.restaurantTableCount,
+      seatsPerTable: config.seatsPerTable,
+    },
+    site: {
+      name: config.restaurantDisplayName,
+      publicBaseUrl: config.publicBaseUrl ? config.publicBaseUrl : null,
+    },
   };
 }

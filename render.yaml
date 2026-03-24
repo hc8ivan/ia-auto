@@ -19,3 +19,5 @@ services:
       # Obligatoria: en el panel de Render, Environment → añade el valor (no va en git).
       - key: OPENAI_API_KEY
         sync: false
+      - key: ADMIN_API_KEY
+        sync: false
