@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#0a0b0d" />
+    <meta name="color-scheme" content="dark" />
+    <title>La Terraza — Concierge</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true">
+      <div class="page-bg__glow page-bg__glow--1"></div>
+      <div class="page-bg__glow page-bg__glow--2"></div>
+      <div class="page-bg__grain"></div>
+    </div>
+
+    <div class="layout">
+      <header class="hero">
+        <div class="hero__top">
+          <div class="mark" aria-hidden="true">
+            <span class="mark__inner">LT</span>
+          </div>
+          <div class="hero__titles">
+            <p class="hero__eyebrow">Restaurante · Madrid centro</p>
+            <h1 class="hero__name">La Terraza</h1>
+            <p class="hero__tagline">
+              Cocina mediterránea y reservas con el mismo cuidado que en sala.
+            </p>
+          </div>
+        </div>
+
+        <ul class="chips" aria-label="Información del restaurante">
+          <li class="chip">
+            <span class="chip__label">Comida</span>
+            <span class="chip__value">13:00 – 16:00</span>
+          </li>
+          <li class="chip">
+            <span class="chip__label">Cena</span>
+            <span class="chip__value">20:00 – 23:00</span>
+          </li>
+          <li class="chip">
+            <span class="chip__label">Sala</span>
+            <span class="chip__value">15 mesas</span>
+          </li>
+          <li class="chip chip--accent">
+            <span class="chip__label">Asistente</span>
+            <span class="chip__value">24/7 online</span>
+          </li>
+        </ul>
+      </header>
+
+      <main class="main">
+        <section
+          class="chat-panel"
+          aria-label="Conversación con el asistente del restaurante"
+        >
+          <div class="chat-panel__head">
+            <div class="chat-panel__head-left">
+              <span class="live-dot" aria-hidden="true"></span>
+              <div>
+                <h2 class="chat-panel__title">Concierge digital</h2>
+                <p class="chat-panel__sub">Reservas, horarios y consultas</p>
+              </div>
+            </div>
+            <p class="chat-panel__hint">
+              Disponibilidad en tiempo real · Madrid
+            </p>
+          </div>
+
+          <div class="chat-panel__body">
+            <div id="messages" class="messages" tabindex="-1">
+              <div class="empty" id="empty">
+                <p class="empty__title">¿En qué podemos ayudarte?</p>
+                <p class="empty__text">
+                  Indica fecha, hora, comensales, teléfono y correo para la
+                  confirmación. Menciona si preferís terraza o una celebración.
+                </p>
+              </div>
+            </div>
+
+            <div
+              id="typing"
+              class="typing"
+              hidden
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span class="typing__avatar" aria-hidden="true"></span>
+              <span class="typing__label">La Terraza está escribiendo</span>
+              <span class="typing__dots" aria-hidden="true"
+                ><span></span><span></span><span></span
+              ></span>
+            </div>
+          </div>
+
+          <form id="form" class="composer">
+            <div class="composer__field">
+              <label class="sr-only" for="input">Tu mensaje</label>
+              <textarea
+                id="input"
+                class="composer__input"
+                name="message"
+                rows="2"
+                maxlength="2000"
+                required
+                autocomplete="off"
+                placeholder="Ej.: Mesa para 2, sábado 21:00, alergia al marisco."
+              ></textarea>
+              <span class="composer__meta" id="counter" aria-hidden="true"
+                >0 / 2000</span
+              >
+            </div>
+            <button type="submit" class="composer__submit" id="send">
+              <span class="composer__submit-text">Enviar</span>
+              <svg
+                class="composer__icon"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M5 12h12m0 0-4-4m4 4-4 4"
+                  stroke="currentColor"
+                  stroke-width="1.75"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </button>
+          </form>
+          <p id="status" class="foot-note" role="status"></p>
+        </section>
+
+        <footer class="footer">
+          <p>
+            La Terraza · Madrid centro · Asistente con IA · Datos tratados con
+            fines de reserva
+          </p>
+        </footer>
+      </main>
+    </div>
+
+    <script src="/app.js" defer></script>
+  </body>
+</html>
