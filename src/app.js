@@ -11,6 +11,7 @@ import mailRoutes from "./routes/mailRoutes.js";
 import chatRoutes from "./routes/chatRoutes.js";
 import { notFound } from "./middleware/notFound.js";
 import { errorHandler } from "./middleware/errorHandler.js";
+import { requestId } from "./middleware/requestId.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "..", "public");
@@ -21,6 +22,8 @@ export function createApp() {
   if (config.trustProxy) {
     app.set("trust proxy", 1);
   }
+
+  app.use(requestId);
 
   app.disable("x-powered-by");
 
@@ -58,10 +61,6 @@ export function createApp() {
   app.use("/api", reservationRoutes);
   app.use("/api", mailRoutes);
   app.use("/api", chatRoutes);
-  app.use(scheduleRoutes);
-  app.use(reservationRoutes);
-  app.use(mailRoutes);
-  app.use(chatRoutes);
 
   app.use(notFound);
   app.use(errorHandler);

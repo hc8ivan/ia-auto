@@ -1,18 +1,16 @@
 import path from "node:path";
 import dotenv from "dotenv";
+import { z } from "zod";
 
 dotenv.config();
 
-/**
- * @param {string} name
- * @returns {string}
- */
-function requireEnv(name) {
-  const value = process.env[name];
-  if (value === undefined || value === "") {
-    throw new Error(`Variable de entorno obligatoria ausente o vacía: ${name}`);
-  }
-  return value;
+const openaiKeyParsed = z
+  .string()
+  .min(1, "OPENAI_API_KEY obligatoria")
+  .safeParse(process.env.OPENAI_API_KEY?.trim());
+if (!openaiKeyParsed.success) {
+  const msg = openaiKeyParsed.error.issues.map((i) => i.message).join("; ");
+  throw new Error(`Configuración .env: ${msg}`);
 }
 
 /**
@@ -33,7 +31,7 @@ export const config = {
   port: Number.isFinite(port) && port > 0 ? port : 3000,
   nodeEnv: process.env.NODE_ENV ?? "development",
   isDev: (process.env.NODE_ENV ?? "development") !== "production",
-  openaiApiKey: requireEnv("OPENAI_API_KEY"),
+  openaiApiKey: openaiKeyParsed.data,
   corsOrigin: process.env.CORS_ORIGIN ?? "*",
   /** Ruta del fichero SQLite (relativa a `process.cwd()` o absoluta). */
   databasePath: path.isAbsolute(dbRelative)
@@ -88,4 +86,12 @@ export const config = {
    * Pon true solo para relays internos sin autenticación.
    */
   smtpAllowNoAuth: process.env.SMTP_ALLOW_NO_AUTH === "true",
+  /**
+   * Ventana (s) para tratar un segundo create_reservation igual (misma sesión) como idempotente.
+   * Evita doble reserva si el modelo llama al tool dos veces.
+   */
+  reservationIdempotencyWindowSec: Math.min(
+    900,
+    Math.max(30, intEnv("RESERVATION_IDEMPOTENCY_WINDOW_SEC", 120)),
+  ),
 };

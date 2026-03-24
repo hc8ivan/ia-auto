@@ -1,15 +1,17 @@
 import { randomUUID } from "node:crypto";
 import { config } from "../config/env.js";
 import { isValidEmail } from "../lib/emailValidation.js";
+import { AppError } from "../lib/AppError.js";
+import {
+  sumTablesUsedDuring,
+  freeTables as freeTablesTotal,
+} from "../lib/reservationAvailabilityMath.js";
+import { getDb } from "../db/database.js";
 import * as auditRepository from "../repositories/auditRepository.js";
 import * as reservationRepository from "../repositories/reservationRepository.js";
 import * as sessionRepository from "../repositories/sessionRepository.js";
 import * as scheduleService from "./scheduleService.js";
 import * as mailService from "./mailService.js";
-
-function overlaps(a0, a1, b0, b1) {
-  return a0 < b1 && b0 < a1;
-}
 
 function tablesForParty(partySize) {
   return Math.max(1, Math.ceil(partySize / config.seatsPerTable));
@@ -17,20 +19,19 @@ function tablesForParty(partySize) {
 
 function sumTablesDuring(dateYmd, startMin, endMin) {
   const rows = reservationRepository.listConfirmedForDate(dateYmd);
-  let sum = 0;
-  for (const r of rows) {
-    const s = scheduleService.hhmmToMinutes(r.start_time);
-    if (s === null) continue;
-    const e = s + r.duration_minutes;
-    if (overlaps(startMin, endMin, s, e)) {
-      sum += r.tables_used;
-    }
-  }
-  return sum;
+  return sumTablesUsedDuring(
+    rows,
+    startMin,
+    endMin,
+    scheduleService.hhmmToMinutes,
+  );
 }
 
 function freeTablesDuring(dateYmd, startMin, endMin) {
-  return config.restaurantTableCount - sumTablesDuring(dateYmd, startMin, endMin);
+  return freeTablesTotal(
+    config.restaurantTableCount,
+    sumTablesDuring(dateYmd, startMin, endMin),
+  );
 }
 
 /**
@@ -208,32 +209,75 @@ export async function createReservationFromTool(input, sessionId) {
   }
 
   const endMin = startMin + picked.duration;
-  const free = freeTablesDuring(date, startMin, endMin);
-  if (free < tablesUsed) {
-    return {
-      ok: false,
-      error: `No hay suficientes mesas libres (necesarias: ${tablesUsed}, libres: ${free}). Usa check_availability y ofrece otra franja.`,
-    };
-  }
-
-  const id = randomUUID();
   const timeStr = minutesToHHmm(startMin);
 
-  reservationRepository.insertReservation({
-    id,
-    reservation_date: date,
-    start_time: timeStr,
-    duration_minutes: picked.duration,
-    party_size: party,
-    tables_used: tablesUsed,
-    customer_name: name,
-    customer_phone: phone,
-    customer_email: email,
-    session_id: sessionId ?? null,
-    notes: null,
-  });
+  /** @type {{ kind: 'duplicate', id: string, duration_minutes: number, tables_used: number } | { kind: 'new', id: string }} */
+  let txOutcome;
+  try {
+    txOutcome = getDb()
+      .transaction(() => {
+        if (sessionId) {
+          const dup =
+            reservationRepository.findRecentDuplicateForSession(
+              sessionId,
+              date,
+              timeStr,
+              party,
+              config.reservationIdempotencyWindowSec,
+            );
+          if (dup) {
+            return {
+              kind: /** @type {const} */ ("duplicate"),
+              id: dup.id,
+              duration_minutes: dup.duration_minutes,
+              tables_used: dup.tables_used,
+            };
+          }
+        }
 
-  if (sessionId) {
+        const rows = reservationRepository.listConfirmedForDate(date);
+        const used = sumTablesUsedDuring(
+          rows,
+          startMin,
+          endMin,
+          scheduleService.hhmmToMinutes,
+        );
+        const free = config.restaurantTableCount - used;
+        if (free < tablesUsed) {
+          throw new AppError(
+            409,
+            `No hay suficientes mesas libres (necesarias: ${tablesUsed}, libres: ${free}). Usa check_availability y ofrece otra franja.`,
+          );
+        }
+
+        const id = randomUUID();
+        reservationRepository.insertReservation({
+          id,
+          reservation_date: date,
+          start_time: timeStr,
+          duration_minutes: picked.duration,
+          party_size: party,
+          tables_used: tablesUsed,
+          customer_name: name,
+          customer_phone: phone,
+          customer_email: email,
+          session_id: sessionId ?? null,
+          notes: null,
+        });
+        return { kind: /** @type {const} */ ("new"), id };
+      })
+      .immediate();
+  } catch (e) {
+    if (e instanceof AppError) {
+      return { ok: false, error: e.message };
+    }
+    throw e;
+  }
+
+  const isDuplicate = txOutcome.kind === "duplicate";
+  const id = txOutcome.id;
+
+  if (!isDuplicate && sessionId) {
     sessionRepository.updateSessionContact(sessionId, {
       name,
       phone,
@@ -244,7 +288,7 @@ export async function createReservationFromTool(input, sessionId) {
   let confirmationEmailSent = false;
   let confirmationEmailDetail = "sent";
 
-  if (mailService.isMailConfigured()) {
+  if (!isDuplicate && mailService.isMailConfigured()) {
     const mailResult = await mailService.sendReservationConfirmationEmail({
       to: email,
       customerName: name,
@@ -260,25 +304,31 @@ export async function createReservationFromTool(input, sessionId) {
     if (!mailResult.sent) {
       confirmationEmailDetail = mailResult.error ?? "send_failed";
     }
-  } else {
+  } else if (!isDuplicate) {
     confirmationEmailDetail = "smtp_not_configured";
     console.warn(
       "[mail] SMTP no configurado (SMTP_HOST / MAIL_FROM); reserva guardada sin email.",
     );
+  } else {
+    confirmationEmailDetail = "skipped_duplicate_tool_call";
   }
 
   auditRepository.insertBusinessEvent({
     sessionId: sessionId ?? null,
-    eventType: "reservation.created",
+    eventType: isDuplicate
+      ? "reservation.idempotent_hit"
+      : "reservation.created",
     entityType: "reservation",
     entityId: id,
     payload: {
       reservation_date: date,
       start_time: timeStr,
       party_size: party,
-      tables_used: tablesUsed,
+      tables_used: isDuplicate ? txOutcome.tables_used : tablesUsed,
       meal: picked.meal,
-      duration_minutes: picked.duration,
+      duration_minutes: isDuplicate
+        ? txOutcome.duration_minutes
+        : picked.duration,
       confirmation_email_sent: confirmationEmailSent,
       confirmation_email_detail: confirmationEmailDetail,
     },
@@ -290,12 +340,15 @@ export async function createReservationFromTool(input, sessionId) {
     date,
     time: timeStr,
     party_size: party,
-    tablesUsed,
+    tablesUsed: isDuplicate ? txOutcome.tables_used : tablesUsed,
     meal: picked.meal,
-    durationMinutes: picked.duration,
+    durationMinutes: isDuplicate
+      ? txOutcome.duration_minutes
+      : picked.duration,
     confirmationEmailSent,
     confirmationEmailDetail:
       confirmationEmailSent === true ? undefined : confirmationEmailDetail,
+    duplicateOfPreviousToolCall: isDuplicate || undefined,
   };
 }
 

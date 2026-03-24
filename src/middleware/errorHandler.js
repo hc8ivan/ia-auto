@@ -28,7 +28,8 @@ export function errorHandler(err, _req, res, _next) {
           : "Error interno del servidor.";
 
   if (status >= 500) {
-    console.error(err);
+    const rid = "requestId" in req && typeof req.requestId === "string" ? req.requestId : "";
+    console.error(rid ? `[${rid}]` : "", err);
   }
 
   res.status(status).json({ error: message });
