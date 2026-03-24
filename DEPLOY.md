@@ -9,7 +9,21 @@ En **Render**, **Railway** (plan hobby), etc., el disco suele ser **efímero**: 
 
 ---
 
-## Opción A — Render.com (simple)
+## Despliegue rápido en Render (repo ya en GitHub)
+
+Repo: [github.com/hc8ivan/ia-auto](https://github.com/hc8ivan/ia-auto).
+
+1. Entra en [render.com](https://render.com) e inicia sesión con GitHub.
+2. **New → Blueprint** → autoriza el repo **hc8ivan/ia-auto** si te lo pide → elige la rama **main** (detectará `render.yaml`).
+3. Antes de aplicar el despliegue, en **Environment** del servicio `ia-auto` añade **`OPENAI_API_KEY`** con tu clave (no se sube a git).
+4. **Apply** / despliega y espera el build Docker (~5–10 min la primera vez).
+5. Abre la URL `https://ia-auto.onrender.com` (o la que te asigne Render). Prueba `GET /health` y abre `/` para el chat.
+
+Si prefieres no usar Blueprint: **New → Web Service** → mismo repo → **Runtime: Docker** → `Dockerfile` en la raíz; mismas variables de entorno y **Health check path:** `/health`.
+
+---
+
+## Opción A — Render.com (paso a paso manual)
 
 1. Cuenta en [render.com](https://render.com) (GitHub/GitLab).
 2. **New → Web Service** → conecta el repo (sube el proyecto a GitHub antes).

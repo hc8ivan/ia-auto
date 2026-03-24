@@ -1,0 +1,21 @@
+# Blueprint Render: New → Blueprint → conecta hc8ivan/ia-auto
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: ia-auto
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TRUST_PROXY
+        value: true
+      - key: CORS_ORIGIN
+        value: "*"
+      # Obligatoria: en el panel de Render, Environment → añade el valor (no va en git).
+      - key: OPENAI_API_KEY
+        sync: false
