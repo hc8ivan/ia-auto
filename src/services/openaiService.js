@@ -7,6 +7,7 @@ import {
 } from "../constants/prompts.js";
 import { ASSISTANT_TOOLS } from "../constants/assistantTools.js";
 import * as reservationService from "./reservationService.js";
+import { logger } from "../lib/logger.js";
 
 const client = new OpenAI({ apiKey: config.openaiApiKey });
 
@@ -95,7 +96,10 @@ export async function runChatWithTools(
       );
     }
 
-    console.error("[OpenAI]", err);
+    logger.error("openai_request_failed", {
+      status: apiStatus ?? null,
+      message: err instanceof Error ? err.message : String(err),
+    });
     const msg =
       typeof err === "object" &&
       err !== null &&

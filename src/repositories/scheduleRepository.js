@@ -37,7 +37,7 @@ export function countOpeningHours() {
   return row?.n ?? 0;
 }
 
-/** Valores por defecto “La Terraza”: los 7 días, comida y cena (editable en BD / SQL). */
+/** Valores por defecto del restaurante: los 7 días, comida y cena (editable en BD / SQL). */
 export function seedOpeningHoursIfEmpty() {
   if (countOpeningHours() > 0) return;
 

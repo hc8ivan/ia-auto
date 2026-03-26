@@ -48,3 +48,14 @@ export function databaseForeignKeysOk() {
     return false;
   }
 }
+
+/** Cierra SQLite de forma ordenada (deploy / SIGTERM). */
+export function closeDatabase() {
+  if (!db) return;
+  try {
+    db.close();
+  } catch {
+    /* ignore */
+  }
+  db = null;
+}

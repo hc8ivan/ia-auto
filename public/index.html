@@ -10,25 +10,25 @@
     <meta name="color-scheme" content="dark light" />
     <meta
       name="description"
-      content="La Terraza — Reservas, horarios y consultas en Madrid centro. Cocina mediterránea."
+      content="ReservaFlow — Plataforma de reservas, horarios y atención para cualquier restaurante."
     />
-    <meta property="og:title" content="La Terraza — Concierge" />
+    <meta property="og:title" content="ReservaFlow — Smart Reservations" />
     <meta
       property="og:description"
-      content="Reservas, horarios y consultas en Madrid centro. Cocina mediterránea."
+      content="Plataforma profesional para gestionar reservas de restaurantes."
     />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="es_ES" />
     <meta id="meta-og-url" property="og:url" content="" />
     <meta id="meta-og-image" property="og:image" content="" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="La Terraza — Concierge" />
+    <meta name="twitter:title" content="ReservaFlow — Smart Reservations" />
     <meta
       name="twitter:description"
-      content="Reservas, horarios y consultas en Madrid centro."
+      content="Plataforma profesional para gestionar reservas de restaurantes."
     />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <title>La Terraza — Concierge</title>
+    <title>ReservaFlow — Smart Reservations</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -56,11 +56,11 @@
       <header class="hero">
         <div class="hero__top">
           <div class="mark" aria-hidden="true">
-            <span class="mark__inner">LT</span>
+            <span class="mark__inner">RF</span>
           </div>
           <div class="hero__titles">
             <p class="hero__eyebrow">Restaurante · Madrid centro</p>
-            <h1 class="hero__name">La Terraza</h1>
+            <h1 class="hero__name" id="hero-name">ReservaFlow</h1>
             <p class="hero__tagline">
               Cocina mediterránea y reservas con el mismo cuidado que en sala.
             </p>
@@ -108,11 +108,21 @@
             <div class="chat-panel__head-left">
               <span class="live-dot" aria-hidden="true"></span>
               <div>
-                <h2 class="chat-panel__title">Concierge digital</h2>
+                <h2 class="chat-panel__title">Asistente de reservas</h2>
                 <p class="chat-panel__sub">Reservas, horarios y consultas</p>
               </div>
             </div>
             <div class="chat-panel__head-right">
+              <button
+                type="button"
+                class="btn-ghost"
+                id="btn-quick-toggle"
+                title="Abrir reserva rápida"
+                aria-controls="quick-drawer"
+                aria-expanded="false"
+              >
+                Reserva rápida
+              </button>
               <button
                 type="button"
                 class="btn-ghost"
@@ -156,7 +166,7 @@
               aria-atomic="true"
             >
               <span class="typing__avatar" aria-hidden="true"></span>
-              <span class="typing__label">La Terraza está escribiendo</span>
+              <span class="typing__label" id="typing-label">ReservaFlow está escribiendo</span>
               <span class="typing__dots" aria-hidden="true"
                 ><span></span><span></span><span></span
               ></span>
@@ -207,20 +217,55 @@
           </form>
           <p id="status" class="foot-note" role="status"></p>
           <p class="micro-legal" aria-hidden="true">
-            La Terraza · Madrid · Asistente con IA · Datos para reserva ·
+            ReservaFlow · Plataforma de reservas · Datos para reserva ·
             <a class="footer-link" href="/reservas">Calendario</a>
           </p>
         </section>
 
         <footer class="footer">
           <p>
-            La Terraza · Madrid centro · Asistente con IA · Datos tratados con
+            ReservaFlow · Plataforma para restaurantes · Datos tratados con
             fines de reserva ·
             <a class="footer-link" href="/reservas">Calendario de reservas</a>
           </p>
         </footer>
       </main>
     </div>
+
+    <div class="quick-drawer-backdrop" id="quick-backdrop" hidden></div>
+    <aside class="quick-drawer" id="quick-drawer" hidden aria-label="Reserva rápida">
+      <section class="quick-reserve" aria-label="Reserva rápida">
+        <div class="quick-reserve__top">
+          <h3 class="quick-reserve__title">Reserva rápida</h3>
+          <button type="button" class="btn-ghost quick-drawer__close" id="btn-quick-close">
+            Cerrar
+          </button>
+        </div>
+        <p class="quick-reserve__hint">Seleccione fecha y hora para sugerir un mensaje al chat.</p>
+        <div class="quick-reserve__controls">
+          <label class="quick-reserve__field">
+            <span>Fecha</span>
+            <input type="date" id="quick-date" />
+          </label>
+          <label class="quick-reserve__field">
+            <span>Comensales</span>
+            <select id="quick-party">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4" selected>4</option>
+              <option value="5">5</option>
+              <option value="6">6</option>
+              <option value="7">7</option>
+              <option value="8">8</option>
+            </select>
+          </label>
+          <button type="button" class="btn-ghost" id="quick-refresh">Ver huecos</button>
+        </div>
+        <div class="quick-reserve__slots" id="quick-slots">
+          <p class="quick-reserve__empty">Cargando disponibilidad…</p>
+        </div>
+      </section>
+    </aside>
 
     <template id="tpl-empty">
       <div class="empty" data-empty-root>
@@ -235,3 +280,4 @@
     <script src="/app.js" defer></script>
   </body>
 </html>
+

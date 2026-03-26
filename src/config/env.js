@@ -24,11 +24,11 @@ function intEnv(name, fallback) {
   return Number.isFinite(n) && n > 0 ? n : fallback;
 }
 
-const port = Number.parseInt(process.env.PORT ?? "3000", 10);
+const port = Number.parseInt(process.env.PORT ?? "4000", 10);
 
 const dbRelative = process.env.DATABASE_PATH ?? path.join("data", "chat.db");
 export const config = {
-  port: Number.isFinite(port) && port > 0 ? port : 3000,
+  port: Number.isFinite(port) && port > 0 ? port : 4000,
   nodeEnv: process.env.NODE_ENV ?? "development",
   isDev: (process.env.NODE_ENV ?? "development") !== "production",
   openaiApiKey: openaiKeyParsed.data,
@@ -73,7 +73,7 @@ export const config = {
   /** Máximo de vueltas tool → modelo (evita bucles). */
   assistantToolMaxRounds: Math.min(12, Math.max(1, intEnv("ASSISTANT_TOOL_MAX_ROUNDS", 6))),
   /** Nombre del local en el asunto/cuerpo del correo. */
-  restaurantDisplayName: process.env.RESTAURANT_NAME ?? "La Terraza",
+  restaurantDisplayName: process.env.RESTAURANT_NAME ?? "Tu Restaurante",
   /** SMTP opcional: si falta SMTP_HOST o MAIL_FROM, no se envía correo (la reserva igual se guarda). */
   smtpHost: process.env.SMTP_HOST ?? "",
   smtpPort: intEnv("SMTP_PORT", 587),

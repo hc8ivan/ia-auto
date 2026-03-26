@@ -1,5 +1,6 @@
-const SESSION_KEY = "la-terraz-assistant-session";
+const SESSION_KEY = "reserva-flow-session";
 const THEME_KEY = "lt-theme";
+const APP_NAME = "ReservaFlow";
 
 const messagesEl = document.getElementById("messages");
 const messagesSkeletonEl = document.getElementById("messages-skeleton");
@@ -12,6 +13,16 @@ const typingEl = document.getElementById("typing");
 const counterEl = document.getElementById("counter");
 const themeToggleBtn = document.getElementById("theme-toggle");
 const newChatBtn = document.getElementById("btn-new-chat");
+const quickDateEl = document.getElementById("quick-date");
+const quickPartyEl = document.getElementById("quick-party");
+const quickRefreshEl = document.getElementById("quick-refresh");
+const quickSlotsEl = document.getElementById("quick-slots");
+const quickToggleBtn = document.getElementById("btn-quick-toggle");
+const quickDrawerEl = document.getElementById("quick-drawer");
+const quickBackdropEl = document.getElementById("quick-backdrop");
+const quickCloseBtn = document.getElementById("btn-quick-close");
+const heroNameEl = document.getElementById("hero-name");
+const typingLabelEl = document.getElementById("typing-label");
 
 const MAX_LEN = 2000;
 
@@ -98,11 +109,22 @@ async function loadScheduleForHero() {
     applyScheduleToChips(data);
     const site =
       data.site && typeof data.site === "object" ? data.site : null;
+    if (heroNameEl) {
+      heroNameEl.textContent =
+        typeof site?.name === "string" && site.name.trim().length > 0
+          ? site.name.trim()
+          : APP_NAME;
+    }
+    if (typingLabelEl) {
+      typingLabelEl.textContent = `${heroNameEl?.textContent || APP_NAME} está escribiendo`;
+    }
     applyShareMeta(site);
   } catch {
     document.getElementById("chip-lunch").textContent = "—";
     document.getElementById("chip-dinner").textContent = "—";
     document.getElementById("chip-tables").textContent = "—";
+    if (heroNameEl) heroNameEl.textContent = APP_NAME;
+    if (typingLabelEl) typingLabelEl.textContent = `${APP_NAME} está escribiendo`;
     applyShareMeta(null);
   }
 }
@@ -141,7 +163,7 @@ function announceForA11y(text) {
   const t = text.length > 280 ? `${text.slice(0, 280)}…` : text;
   el.textContent = "";
   requestAnimationFrame(() => {
-    el.textContent = `La Terraza: ${t}`;
+    el.textContent = `${heroNameEl?.textContent || APP_NAME}: ${t}`;
   });
 }
 
@@ -193,6 +215,89 @@ function setStatus(text, isError) {
 function updateCounter() {
   const n = inputEl.value.length;
   counterEl.textContent = `${n} / ${MAX_LEN}`;
+}
+
+function setQuickDrawer(open) {
+  if (!quickDrawerEl || !quickBackdropEl || !quickToggleBtn) return;
+  quickDrawerEl.hidden = !open;
+  quickBackdropEl.hidden = !open;
+  quickToggleBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+
+function todayYmdLocal() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function tableIcons(freeTables, totalTables) {
+  const visible = Math.max(0, Math.min(8, Number(freeTables) || 0));
+  const icons = "🍽️".repeat(visible);
+  const extra = (Number(freeTables) || 0) > 8 ? ` +${(Number(freeTables) || 0) - 8}` : "";
+  return `${icons}${extra} / ${totalTables}`;
+}
+
+function slotButtonLabel(slot, mealLabel) {
+  return `
+    <span>${slot.time}</span>
+    <span class="quick-slot__meal">${mealLabel}</span>
+    <span class="quick-slot__tables">${tableIcons(slot.freeTables, slot.totalTables)}</span>
+  `;
+}
+
+async function loadQuickAvailability() {
+  const date = quickDateEl?.value;
+  if (!date || !quickSlotsEl) return;
+  quickSlotsEl.innerHTML = '<p class="quick-reserve__empty">Consultando huecos…</p>';
+  try {
+    const res = await fetch(`/api/availability?date=${encodeURIComponent(date)}`, {
+      headers: { Accept: "application/json" },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.closed) {
+      quickSlotsEl.innerHTML = '<p class="quick-reserve__empty">Sin disponibilidad para ese día.</p>';
+      return;
+    }
+    const all = [];
+    if (Array.isArray(data?.slots?.lunch)) {
+      for (const s of data.slots.lunch) all.push({ ...s, meal: "Comida" });
+    }
+    if (Array.isArray(data?.slots?.dinner)) {
+      for (const s of data.slots.dinner) all.push({ ...s, meal: "Cena" });
+    }
+    const party = Number(quickPartyEl?.value || "4");
+    const seatsPerTable = Number(data?.seatsPerTable || 4);
+    const tablesNeeded = Math.max(1, Math.ceil(party / Math.max(1, seatsPerTable)));
+    const open = all
+      .filter((s) => (Number(s.freeTables) || 0) >= tablesNeeded)
+      .slice(0, 10);
+    if (open.length === 0) {
+      quickSlotsEl.innerHTML = `<p class="quick-reserve__empty">No hay huecos para ${party} personas (necesitan ${tablesNeeded} mesa(s)).</p>`;
+      return;
+    }
+    quickSlotsEl.replaceChildren();
+    const hint = document.createElement("p");
+    hint.className = "quick-reserve__empty";
+    hint.textContent = `Para ${party} personas se requieren ${tablesNeeded} mesa(s).`;
+    quickSlotsEl.appendChild(hint);
+    for (const slot of open) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "quick-slot";
+      btn.innerHTML = slotButtonLabel(slot, slot.meal);
+      btn.addEventListener("click", () => {
+        inputEl.value = `Quiero reservar para ${party} personas el ${date} a las ${slot.time}. Mi nombre es `;
+        updateCounter();
+        inputEl.focus();
+        setQuickDrawer(false);
+      });
+      quickSlotsEl.appendChild(btn);
+    }
+  } catch {
+    quickSlotsEl.innerHTML = '<p class="quick-reserve__empty">No se pudo cargar disponibilidad.</p>';
+  }
 }
 
 /**
@@ -300,14 +405,36 @@ initTheme();
 applyShareMeta(null);
 void loadScheduleForHero();
 void hydrateSession();
+if (quickDateEl) {
+  quickDateEl.value = todayYmdLocal();
+  void loadQuickAvailability();
+}
 
 themeToggleBtn?.addEventListener("click", toggleTheme);
 newChatBtn?.addEventListener("click", () => resetConversation());
+quickRefreshEl?.addEventListener("click", () => {
+  void loadQuickAvailability();
+});
+quickToggleBtn?.addEventListener("click", () => {
+  const willOpen = quickDrawerEl?.hidden ?? true;
+  setQuickDrawer(willOpen);
+});
+quickCloseBtn?.addEventListener("click", () => setQuickDrawer(false));
+quickBackdropEl?.addEventListener("click", () => setQuickDrawer(false));
+quickDateEl?.addEventListener("change", () => {
+  void loadQuickAvailability();
+});
+quickPartyEl?.addEventListener("change", () => {
+  void loadQuickAvailability();
+});
 
 inputEl.addEventListener("input", updateCounter);
 updateCounter();
 
 inputEl.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    setQuickDrawer(false);
+  }
   if (e.key !== "Enter" || e.shiftKey) return;
   if (e.isComposing) return;
   e.preventDefault();
@@ -333,6 +460,7 @@ formEl.addEventListener("submit", async (e) => {
     const reply = await sendMessage(text);
     appendMessage("bot", reply);
     setStatus("", false);
+    void loadQuickAvailability();
   } catch (err) {
     let msg = err instanceof Error ? err.message : "Error desconocido.";
     if (

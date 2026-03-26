@@ -12,6 +12,7 @@ import * as reservationRepository from "../repositories/reservationRepository.js
 import * as sessionRepository from "../repositories/sessionRepository.js";
 import * as scheduleService from "./scheduleService.js";
 import * as mailService from "./mailService.js";
+import { logger } from "../lib/logger.js";
 
 function tablesForParty(partySize) {
   return Math.max(1, Math.ceil(partySize / config.seatsPerTable));
@@ -306,9 +307,7 @@ export async function createReservationFromTool(input, sessionId) {
     }
   } else if (!isDuplicate) {
     confirmationEmailDetail = "smtp_not_configured";
-    console.warn(
-      "[mail] SMTP no configurado (SMTP_HOST / MAIL_FROM); reserva guardada sin email.",
-    );
+    logger.warn("mail_smtp_not_configured_reservation_saved", {});
   } else {
     confirmationEmailDetail = "skipped_duplicate_tool_call";
   }

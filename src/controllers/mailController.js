@@ -10,6 +10,6 @@ export function getMailStatus(_req, res) {
     ...s,
     hint: s.ready
       ? "SMTP listo. Si no llega el correo, revise spam y la consola del servidor ([mail])."
-      : `Falta configurar en .env: ${s.missing.join(", ")}. Ejemplo Gmail: SMTP_HOST=smtp.gmail.com SMTP_PORT=587 SMTP_SECURE=false SMTP_USER=su@gmail.com SMTP_PASS=contraseña_de_aplicación MAIL_FROM="La Terraza &lt;su@gmail.com&gt;"`,
+      : `Falta configurar en .env: ${s.missing.join(", ")}. Ejemplo Gmail: SMTP_HOST=smtp.gmail.com SMTP_PORT=587 SMTP_SECURE=false SMTP_USER=su@gmail.com SMTP_PASS=contraseña_de_aplicación MAIL_FROM="ReservaFlow &lt;su@gmail.com&gt;"`,
   });
 }

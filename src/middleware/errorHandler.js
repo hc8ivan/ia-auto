@@ -1,11 +1,12 @@
 import { AppError } from "../lib/AppError.js";
 import { config } from "../config/env.js";
+import { logger } from "../lib/logger.js";
 
 /**
  * Último middleware: respuestas JSON coherentes y sin filtrar detalles internos en producción.
  * @type {import('express').ErrorRequestHandler}
  */
-export function errorHandler(err, _req, res, _next) {
+export function errorHandler(err, req, res, _next) {
   if (res.headersSent) {
     return;
   }
@@ -27,10 +28,27 @@ export function errorHandler(err, _req, res, _next) {
           ? err.message
           : "Error interno del servidor.";
 
+  const requestId =
+    "requestId" in req && typeof req.requestId === "string"
+      ? req.requestId
+      : undefined;
+
   if (status >= 500) {
-    const rid = "requestId" in req && typeof req.requestId === "string" ? req.requestId : "";
-    console.error(rid ? `[${rid}]` : "", err);
+    logger.error("request_failed", {
+      requestId,
+      status,
+      name: err instanceof Error ? err.name : "Error",
+      message: err instanceof Error ? err.message : String(err),
+    });
+    if (config.isDev && err instanceof Error && err.stack) {
+      console.error(err.stack);
+    }
   }
 
-  res.status(status).json({ error: message });
+  /** @type {Record<string, unknown>} */
+  const body = { error: message };
+  if (requestId) {
+    body.requestId = requestId;
+  }
+  res.status(status).json(body);
 }

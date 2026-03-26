@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#0a0b0d" />
     <meta name="color-scheme" content="dark light" />
     <meta name="robots" content="noindex,nofollow" />
-    <title>La Terraza — Calendario de reservas</title>
+    <title>ReservaFlow — Calendario de reservas</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="/styles.css" />
     <link rel="stylesheet" href="/reservas.css" />
@@ -55,7 +55,16 @@
           <h2 class="reservas-month" id="month-label"></h2>
           <button type="button" class="btn-icon" id="btn-next" aria-label="Mes siguiente">›</button>
           <button type="button" class="btn-ghost btn-today" id="btn-today">Hoy</button>
+          <button type="button" class="btn-ghost" id="btn-export-csv">Exportar CSV</button>
+          <label class="auto-refresh">
+            <input type="checkbox" id="auto-refresh" checked />
+            Auto (30s)
+          </label>
         </div>
+
+        <section class="reservas-summary card-surface" id="summary-panel">
+          <p class="reservas-summary__placeholder">Seleccione un día para ver KPIs.</p>
+        </section>
 
         <div class="reservas-cal-wrap card-surface">
           <div class="cal-weekdays" aria-hidden="true">
@@ -94,3 +103,4 @@
     <script src="/reservas.js" defer></script>
   </body>
 </html>
+

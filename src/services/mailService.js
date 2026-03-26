@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { config } from "../config/env.js";
+import { logger } from "../lib/logger.js";
 
 /**
  * Listo para enviar: host, remitente y credenciales (salvo relay explícito sin auth).
@@ -51,9 +52,9 @@ export function getMailConfigStatus() {
  */
 export async function sendTransactionalMail({ to, subject, text, html }) {
   if (!isMailConfigured()) {
-    console.warn(
-      "[mail] No se envía: falta configuración SMTP o credenciales. GET /api/mail/status para detalle.",
-    );
+    logger.warn("mail_skip_smtp_not_configured", {
+      hint: "GET /api/mail/status",
+    });
     return { sent: false, error: "smtp_not_configured" };
   }
 
@@ -81,14 +82,15 @@ export async function sendTransactionalMail({ to, subject, text, html }) {
       text,
       html,
     });
-    console.log(
-      `[mail] Correo enviado messageId=${info.messageId ?? "?"} -> ${to.trim()}`,
-    );
+    logger.info("mail_sent", {
+      messageId: info.messageId ?? null,
+      toDomain: to.trim().split("@")[1] ?? "?",
+    });
     return { sent: true, messageId: info.messageId };
   } catch (err) {
     const code = /** @type {{ code?: string }} */ (err).code;
     const msg = err instanceof Error ? err.message : String(err);
-    console.error("[mail] Fallo SMTP:", code ?? "", msg);
+    logger.error("mail_smtp_failed", { code: code ?? null, message: msg });
     return { sent: false, error: code ? `${code}: ${msg}` : msg };
   }
 }

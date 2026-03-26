@@ -10,6 +10,9 @@ const calGrid = document.getElementById("cal-grid");
 const btnPrev = document.getElementById("btn-prev");
 const btnNext = document.getElementById("btn-next");
 const btnToday = document.getElementById("btn-today");
+const btnExportCsv = document.getElementById("btn-export-csv");
+const autoRefreshToggle = document.getElementById("auto-refresh");
+const summaryPanel = document.getElementById("summary-panel");
 const detailPlaceholder = document.getElementById("detail-placeholder");
 const detailContent = document.getElementById("detail-content");
 const mailTestTo = document.getElementById("mail-test-to");
@@ -21,6 +24,7 @@ let byDate = new Map();
 /** @type {{ y: number, m: number }} mes 1–12 */
 let view = { y: new Date().getFullYear(), m: new Date().getMonth() + 1 };
 let selectedYmd = null;
+let refreshTimer = null;
 
 function getKey() {
   return sessionStorage.getItem(STORAGE_KEY) ?? "";
@@ -98,6 +102,18 @@ async function fetchMonth() {
   }
   byDate = buildMap(data.reservations ?? []);
   renderCalendar();
+  if (selectedYmd) {
+    const selected = byDate.get(selectedYmd) ?? [];
+    if (selected.length > 0) {
+      showDetail(selectedYmd, selected);
+      await loadSummary(selectedYmd);
+    } else {
+      selectedYmd = null;
+      detailPlaceholder.hidden = false;
+      detailContent.hidden = true;
+      renderSummaryPlaceholder();
+    }
+  }
 }
 
 function monthTitle() {
@@ -173,10 +189,41 @@ function renderCalendar() {
       selectedYmd = ymd;
       renderCalendar();
       showDetail(ymd, list);
+      void loadSummary(ymd);
     });
 
     calGrid.appendChild(cell);
   }
+}
+
+function renderSummaryPlaceholder() {
+  summaryPanel.innerHTML =
+    '<p class="reservas-summary__placeholder">Seleccione un día para ver KPIs.</p>';
+}
+
+/**
+ * @param {string} ymd
+ */
+async function loadSummary(ymd) {
+  const res = await fetch(
+    `/api/admin/reservations/summary?date=${encodeURIComponent(ymd)}`,
+    { headers: authHeaders() },
+  );
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    summaryPanel.innerHTML = `<p class="reservas-summary__placeholder">${escapeHtml(
+      typeof data.error === "string" ? data.error : `Error ${res.status}`,
+    )}</p>`;
+    return;
+  }
+  summaryPanel.innerHTML = `
+    <div class="reservas-kpis">
+      <article class="kpi"><p class="kpi__label">Reservas</p><p class="kpi__value">${data.totalReservations}</p></article>
+      <article class="kpi"><p class="kpi__label">Comensales</p><p class="kpi__value">${data.totalGuests}</p></article>
+      <article class="kpi"><p class="kpi__label">Mesas usadas</p><p class="kpi__value">${data.totalTablesUsed}</p></article>
+      <article class="kpi"><p class="kpi__label">Pico por reserva</p><p class="kpi__value">${data.peakTablesInOneReservation}</p></article>
+    </div>
+  `;
 }
 
 function showDetail(ymd, list) {
@@ -234,13 +281,33 @@ function showMain() {
   mainPanel.hidden = false;
 }
 
+function currentMonthRange() {
+  const from = toYmd(view.y, view.m, 1);
+  const to = toYmd(view.y, view.m, daysInMonth(view.y, view.m));
+  return { from, to };
+}
+
+function scheduleAutoRefresh() {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+  if (!autoRefreshToggle.checked) return;
+  refreshTimer = setInterval(() => {
+    if (document.hidden) return;
+    void fetchMonth();
+  }, 30_000);
+}
+
 async function init() {
+  renderSummaryPlaceholder();
   if (!getKey()) {
     showAuth();
     return;
   }
   showMain();
   await fetchMonth();
+  scheduleAutoRefresh();
 }
 
 btnSaveKey.addEventListener("click", () => {
@@ -254,6 +321,7 @@ btnSaveKey.addEventListener("click", () => {
   setError("");
   showMain();
   void fetchMonth();
+  scheduleAutoRefresh();
 });
 
 btnPrev.addEventListener("click", () => {
@@ -266,6 +334,7 @@ btnPrev.addEventListener("click", () => {
   selectedYmd = null;
   detailPlaceholder.hidden = false;
   detailContent.hidden = true;
+  renderSummaryPlaceholder();
   void fetchMonth();
 });
 
@@ -279,6 +348,7 @@ btnNext.addEventListener("click", () => {
   selectedYmd = null;
   detailPlaceholder.hidden = false;
   detailContent.hidden = true;
+  renderSummaryPlaceholder();
   void fetchMonth();
 });
 
@@ -289,7 +359,46 @@ btnToday.addEventListener("click", () => {
   selectedYmd = null;
   detailPlaceholder.hidden = false;
   detailContent.hidden = true;
+  renderSummaryPlaceholder();
   void fetchMonth();
+});
+
+autoRefreshToggle.addEventListener("change", scheduleAutoRefresh);
+
+btnExportCsv.addEventListener("click", () => {
+  const { from, to } = currentMonthRange();
+  const url =
+    `/api/admin/reservations/export.csv?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`;
+  fetch(url, { headers: authHeaders() })
+    .then((res) => {
+      if (!res.ok) {
+        return res
+          .json()
+          .catch(() => ({}))
+          .then((data) => {
+            throw new Error(
+              typeof data.error === "string"
+                ? data.error
+                : `No se pudo exportar CSV (HTTP ${res.status}).`,
+            );
+          });
+      }
+      return res.blob();
+    })
+    .then((blob) => {
+      if (blob.size === 0) {
+        throw new Error("CSV vacío. Revise el rango o la clave de administración.");
+      }
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = `reservas_${from}_a_${to}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(href);
+    })
+    .catch((err) => setError(err.message || "Error al exportar CSV."));
 });
 
 btnMailTest.addEventListener("click", async () => {

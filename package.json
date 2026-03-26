@@ -1,7 +1,7 @@
 {
-  "name": "restaurant-chat-mvp",
+  "name": "reserva-flow",
   "version": "1.0.0",
-  "description": "Asistente IA para restaurante (Express, OpenAI, SQLite)",
+  "description": "ReservaFlow: plataforma de reservas para restaurantes (Express, OpenAI, SQLite)",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
@@ -17,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "better-sqlite3": "^11.8.1",
+    "compression": "^1.8.1",
     "cors": "^2.8.6",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
