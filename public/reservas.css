@@ -173,6 +173,13 @@ body.reservas-page {
   align-items: center;
   gap: 0.5rem 0.75rem;
   padding: 0.65rem 1rem;
+  justify-content: center;
+}
+
+@media (min-width: 640px) {
+  .reservas-toolbar {
+    justify-content: flex-start;
+  }
 }
 
 .reservas-month {
@@ -181,13 +188,26 @@ body.reservas-page {
   min-width: 0;
   text-align: center;
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: clamp(1rem, 3.5vw, 1.15rem);
   font-weight: 600;
 }
 
+@media (max-width: 639px) {
+  .reservas-month {
+    flex: 1 1 100%;
+    order: -1;
+  }
+
+  .btn-today {
+    margin-left: 0;
+  }
+}
+
 .btn-icon {
-  width: 2.5rem;
-  height: 2.5rem;
+  width: 2.75rem;
+  height: 2.75rem;
+  min-width: 44px;
+  min-height: 44px;
   border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: rgba(255, 255, 255, 0.05);
@@ -442,4 +462,40 @@ body.reservas-page {
 
 [data-theme="light"] .detail-card {
   background: rgba(255, 255, 255, 0.5);
+}
+
+@media (max-width: 640px) {
+  .reservas-auth-row input,
+  .reservas-mail-row input {
+    font-size: 16px;
+  }
+
+  .reservas-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reservas-back {
+    align-self: flex-start;
+    padding: 0.5rem 0;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .reservas-cal-wrap {
+    padding: 0.5rem 0.5rem 0.75rem;
+    max-height: min(55dvh, 480px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .reservas-detail {
+    max-height: min(42dvh, 360px);
+  }
+
+  .btn-primary {
+    min-height: 44px;
+    padding: 0.6rem 1rem;
+  }
 }
