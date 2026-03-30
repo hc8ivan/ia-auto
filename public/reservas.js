@@ -171,8 +171,9 @@ function renderCalendar() {
       cell.classList.add("cal-cell--has");
       const count = document.createElement("span");
       count.className = "cal-cell-count";
-      count.textContent =
-        list.length === 1 ? "1 reserva" : `${list.length} reservas`;
+      const n = list.length;
+      count.textContent = n === 1 ? "1 res." : `${n} res.`;
+      count.title = n === 1 ? "1 reserva" : `${n} reservas`;
       cell.appendChild(count);
     }
 
